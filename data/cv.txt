@@ -1,0 +1,5 @@
+[REPLACE THIS WITH YOUR ACTUAL CV TEXT]
+Name: John Doe
+Skills: JavaScript, Node.js, Express, React, SQL
+Experience: 5 years as a Full Stack Developer
+Education: BS in Computer Science
