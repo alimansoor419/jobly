@@ -9,6 +9,7 @@ function getChromePath() {
   // 1. Use env var only if it's a real path (no wildcard)
   const envPath = process.env.PUPPETEER_EXECUTABLE_PATH;
   if (envPath && !envPath.includes('*') && existsSync(envPath)) {
+    execSync(`chmod +x "${envPath}"`);
     return envPath;
   }
 
@@ -17,7 +18,10 @@ function getChromePath() {
     const found = execSync(
       'find /opt/render/.cache/puppeteer/chrome -name "chrome" -type f 2>/dev/null | head -1'
     ).toString().trim();
-    if (found && existsSync(found)) return found;
+    if (found && existsSync(found))
+      execSync(`chmod +x "${found}"`);
+
+    return found;
   } catch (e) { }
 
   // 3. Fall back to whatever puppeteer thinks (works locally)
