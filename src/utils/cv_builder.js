@@ -3,9 +3,33 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
+
+
+function getChromePath() {
+  // 1. Use env var only if it's a real path (no wildcard)
+  const envPath = process.env.PUPPETEER_EXECUTABLE_PATH;
+  if (envPath && !envPath.includes('*') && existsSync(envPath)) {
+    return envPath;
+  }
+
+  // 2. Dynamically resolve the glob — finds the actual versioned folder
+  try {
+    const found = execSync(
+      'find /opt/render/.cache/puppeteer/chrome -name "chrome" -type f 2>/dev/null | head -1'
+    ).toString().trim();
+    if (found && existsSync(found)) return found;
+  } catch (e) { }
+
+  // 3. Fall back to whatever puppeteer thinks (works locally)
+  return puppeteer.executablePath();
+}
 export async function buildCvPdf(cvHtml, filename) {
   try {
-    console.log("Executable path:", puppeteer.executablePath());
+
+    // Then in your buildCvPdf:
+    const execPath = getChromePath();
+    console.log("Executable path:", execPath);
+
     const browser = await puppeteer.launch({
       headless: "new",
       args: [
@@ -14,8 +38,7 @@ export async function buildCvPdf(cvHtml, filename) {
         "--disable-dev-shm-usage",
         "--disable-gpu"
       ],
-      executablePath:
-        process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath()
+      executablePath: execPath
     });
 
     const page = await browser.newPage();
