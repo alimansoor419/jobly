@@ -1,5 +1,5 @@
 import puppeteer from 'puppeteer';
-import fs from 'fs';
+import fs, { existsSync } from 'fs';
 import path from 'path';
 import os from 'os';
 
@@ -18,10 +18,12 @@ function getChromePath() {
     const found = execSync(
       'find /opt/render/.cache/puppeteer/chrome -name "chrome" -type f 2>/dev/null | head -1'
     ).toString().trim();
-    if (found && existsSync(found))
-      execSync(`chmod +x "${found}"`);
 
-    return found;
+    // ✅ Fix — wrap in braces
+    if (found && existsSync(found)) {
+      execSync(`chmod +x "${found}"`);
+      return found;
+    }
   } catch (e) { }
 
   // 3. Fall back to whatever puppeteer thinks (works locally)
@@ -33,7 +35,7 @@ export async function buildCvPdf(cvHtml, filename) {
 
     // Then in your buildCvPdf:
     const execPath = getChromePath();
-        try {
+    try {
       execSync(`chmod +x "${execPath}"`);
       console.log('[CV BUILDER] chmod applied to:', execPath);
     } catch (e) {
