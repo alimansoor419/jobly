@@ -33,6 +33,12 @@ export async function buildCvPdf(cvHtml, filename) {
 
     // Then in your buildCvPdf:
     const execPath = getChromePath();
+        try {
+      execSync(`chmod +x "${execPath}"`);
+      console.log('[CV BUILDER] chmod applied to:', execPath);
+    } catch (e) {
+      console.warn('[CV BUILDER] chmod failed:', e.message);
+    }
     console.log('[CV BUILDER] executable path:', execPath);
 
     const browser = await puppeteer.launch({
