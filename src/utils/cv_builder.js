@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-
+import { execSync } from 'child_process';
 
 function getChromePath() {
   // 1. Use env var only if it's a real path (no wildcard)
