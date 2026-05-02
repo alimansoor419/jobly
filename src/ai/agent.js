@@ -21,7 +21,8 @@ try {
 } catch (error) {
   console.error("Error loading CV:", error);
 }
-
+const firstLine = CV_TEXT ? CV_TEXT.split(/\r?\n/)[0] : '';
+console.log(`[AI Agent] Loaded CV first line: ${firstLine} from ${CV_PATH}`);
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // List of fallback models to try if the first one is unavailable or high in demand
