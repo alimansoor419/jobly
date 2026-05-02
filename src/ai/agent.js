@@ -29,10 +29,10 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 // List of fallback models to try if the first one is unavailable or high in demand
 // These models are chosen based on the quotas available in your specific Google account tier
 const FALLBACK_MODELS = [
-  "gemini-2.5-flash", 
-  "gemini-3-flash", 
-  "gemini-3.1-flash-lite", 
-  "gemini-2.5-flash-lite"
+  "gemini-2.5-flash",      // primary
+  "gemini-2.5-pro",        // strong fallback
+  "gemini-2.0-flash",      // solid fallback  
+  "gemini-1.5-pro", 
 ];
 
 export async function runAgent(jobDescription) {
