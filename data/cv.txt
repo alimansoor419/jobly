@@ -1,5 +1,156 @@
-[REPLACE THIS WITH YOUR ACTUAL CV TEXT]
-Name: John Doe
-Skills: JavaScript, Node.js, Express, React, SQL
-Experience: 5 years as a Full Stack Developer
-Education: BS in Computer Science
+Mansoor Ali
+Location: Islamabad, Pakistan
+Phone: +92 318 433 4464
+Email: alimansoor419@gmail.com
+Portfolio: https://www.mansoor-ali.online/
+Status: Open to opportunities
+
+----------------------------------------
+SUMMARY
+----------------------------------------
+Backend Engineer and AI Systems Builder with hands-on experience in building production-grade AI SaaS platforms. Skilled in designing RAG pipelines, agent-based APIs, and scalable backend systems using Node.js and Express. Strong foundation in networking (CCNA-level) with practical experience in automation, data pipelines, and system integrations.
+
+----------------------------------------
+SKILLS
+----------------------------------------
+
+Backend Development:
+- Node.js
+- Express.js
+- Python
+- Django
+- REST APIs
+- Sequelize ORM
+- Mongoose ODM
+
+AI / Data Systems:
+- OpenAI, google, grok  APIs
+- RAG Pipelines
+- Vector Databases
+- Embeddings
+- AI Agents
+- Ollama
+
+Databases:
+- MongoDB
+- MySQL
+- PostgreSQL
+- Supabase
+
+Automation & Integration:
+- Playwright (Web Crawlers)
+- Data Pipelines (ETL)
+- n8n
+- Versori
+- Webhooks & API integrations
+
+Networking & Security:
+- CCNA
+Frontend:
+- TypeScript
+- HTML/CSS
+- react js 
+- vanilla js
+
+----------------------------------------
+PROJECTS
+----------------------------------------
+
+ApplyMate AI (Live SaaS)
+- AI-powered platform to help students shortlist universities
+- Built full RAG pipeline using Playwright crawlers + OpenAI vector stores
+- Designed agent-based REST APIs for intelligent querying
+Tech: Node.js, Playwright, OpenAI, Vector DBs, Mysql
+
+Complimate AI (Live SaaS)
+-  AI-powered compliance system aligned with NIST CSF 2.0
+- Built secure backend with validation, sanitization, JWT auth
+Tech: Express.js, Sequelize, OpenAI, Security frameworks
+
+CaniDoit (Live SaaS)
+- AI platform built on shared RAG infrastructure
+- Customized pipelines and APIs for domain-specific use
+Tech: Node.js, Playwright, OpenAI
+
+MatchWise AI (Live SaaS)
+- AI-powered CV optimization and job matching system
+- Performs gap analysis and generates role-specific CVs
+Tech: Node.js, OpenAI, NLP, REST APIs
+
+chatEye (Real-time App)
+- Real-time chat application with rooms and presence
+Tech: Node.js, Socket.IO, Express, MongoDB
+
+Intellisource
+- bloging platform using NLP to suggest users blogs of their interest
+
+----------------------------------------
+EXPERIENCE
+----------------------------------------
+
+Backend Engineer — Phebsoft
+(Nov 2024 – Present | Islamabad)
+- Architected RAG infrastructure for multiple SaaS platforms
+- Built Playwright-based data ingestion systems
+- Designed OpenAI vector pipelines for structured/unstructured data
+- Implemented NIST CSF 2.0 in compliance platform
+- Secured APIs with validation, sanitization, JWT,google auth 
+- Built ETL pipelines (Salesforce, Shopify, QuickBooks)
+- Optimized workflows and automation systems
+
+Solution Engineer — Phebsoft
+(Mar 2024 – Nov 2024 | Islamabad)
+- Developed automation workflows (versori)
+- Built REST APIs and webhook-based systems
+- Ensured data synchronization across platforms
+- Resolved production issues in agile environment
+- build automations on platforms like salesforce shopify quickbooks, etsy and more
+
+
+Developer Intern — TecnoSphere
+(Jun 2023 – Aug 2023)
+- Assisted in backend development
+- Worked on API integrations and automation
+
+----------------------------------------
+EDUCATION
+----------------------------------------
+
+BS Computer Science
+University of the Punjab (2020 – 2024)
+Achievements:
+  - 1st Place — University AI Competition
+  - 3rd Place — Best Final Year Project
+
+----------------------------------------
+CERTIFICATIONS
+----------------------------------------
+
+- Google Network Security (Coursera)
+- IBM Node.js & Express
+- Introduction to MongoDB
+- Introduction to Cybersecurity (Cisco)
+- CS50: Databases with SQL (Harvard)
+- CCNA 
+
+----------------------------------------
+STRENGTHS
+----------------------------------------
+
+- Strong backend engineering and API design
+- Real-world AI system implementation (RAG, agents)
+- Problem-solving and production debugging
+- Fast learner with strong self-learning ability
+- Team collaboration and communication
+
+----------------------------------------
+INTERESTS
+----------------------------------------
+
+- AI systems and automation
+- Backend architecture
+- Networking and cybersecurity
+- Reading (self-help & history)
+- Podcasts
+
+----------------------------------------
