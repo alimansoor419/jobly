@@ -25,10 +25,11 @@ function getChromePath() {
 }
 export async function buildCvPdf(cvHtml, filename) {
   try {
+    console.log(`[CV BUILDER] buildCvPdf start filename=${filename}`);
 
     // Then in your buildCvPdf:
     const execPath = getChromePath();
-    console.log("Executable path:", execPath);
+    console.log('[CV BUILDER] executable path:', execPath);
 
     const browser = await puppeteer.launch({
       headless: "new",
@@ -56,9 +57,11 @@ export async function buildCvPdf(cvHtml, filename) {
     const pdfPath = path.join(tmpDir, filename);
 
     fs.writeFileSync(pdfPath, pdfBuffer);
+    console.log('[CV BUILDER] wrote pdf to', pdfPath);
 
     return pdfPath;
   } catch (error) {
+    console.error('[CV BUILDER] error building pdf:', error);
     throw new Error(`Failed to build CV PDF: ${error.message}`);
   }
 }

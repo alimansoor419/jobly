@@ -5,6 +5,7 @@ export async function postConfirmation(client, channel, threadTs, userId, aiResu
     // Store result and pdfPath in session
     aiResult.pdfPath = pdfPath;
     session.set(userId, aiResult);
+    console.log(`[CONFIRM] stored session for ${userId} thread=${threadTs} filename=${aiResult.cv_filename}`);
 
     const { subject, body } = aiResult;
 
@@ -82,6 +83,7 @@ export async function postConfirmation(client, channel, threadTs, userId, aiResu
       text: "AI has drafted your application",
       blocks: blocks
     });
+    console.log(`[CONFIRM] posted confirmation message to channel=${channel} thread=${threadTs}`);
   } catch (error) {
     console.error("Error posting Slack confirmation:", error);
     await client.chat.postMessage({

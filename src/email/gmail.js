@@ -24,6 +24,7 @@ const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
 export async function sendEmail(to, subject, body, pdfBuffer, pdfFilename) {
   try {
+    console.log(`[EMAIL] sendEmail to=${to} subject_len=${subject ? subject.length : 0} attach=${!!pdfBuffer}`);
     const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
     const boundary = "BOUNDARY_" + Date.now().toString(16);
 
@@ -70,7 +71,6 @@ export async function sendEmail(to, subject, body, pdfBuffer, pdfFilename) {
         raw: encodedMessage,
       },
     });
-
     console.log(`Email sent to ${to}. ID: ${res.data.id}`);
     return res.data;
   } catch (error) {

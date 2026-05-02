@@ -11,9 +11,15 @@ const { SLACK_WORKFLOW_CHANNEL_ID, MY_SLACK_USER_ID } = process.env;
 
 export default function registerTrigger(app) {
   app.message(async ({ message, client }) => {
+    console.log(`[TRIGGER] incoming message ts=${message?.ts} user=${message?.user} channel=${message?.channel}`);
     try {
       // Ignore bot messages and messages from other channels
-      if (message.bot_id !== undefined || message.channel !== SLACK_WORKFLOW_CHANNEL_ID) {
+      if (message.bot_id !== undefined) {
+        console.log('[TRIGGER] ignoring message from bot');
+        return;
+      }
+      if (message.channel !== SLACK_WORKFLOW_CHANNEL_ID) {
+        console.log(`[TRIGGER] ignoring message from channel ${message.channel}`);
         return;
       }
 
@@ -45,22 +51,27 @@ export default function registerTrigger(app) {
       });
 
       // Call AI agent
+      console.log('[TRIGGER] calling AI agent for job description length', (payload.jobDescription || '').length);
       const aiResult = await runAgent(payload.jobDescription);
+      console.log('[TRIGGER] AI agent returned result');
 
       // Add apply-at-email to the result for later use
       aiResult.applyEmail = payload.applyEmail;
 
       // Step A - Build the PDF
+      console.log('[TRIGGER] building CV PDF:', aiResult.cv_filename);
       const pdfPath = await buildCvPdf(aiResult.cv_html, aiResult.cv_filename);
+      console.log('[TRIGGER] built CV PDF at', pdfPath);
 
       // Step B - Upload the PDF to Slack before posting the approval message
-      await client.files.uploadV2({
+      const uploadRes = await client.files.uploadV2({
         channel_id: channel,
         thread_ts: ts, // optionally post the upload to the thread
         filename: aiResult.cv_filename,
         file: fs.createReadStream(pdfPath),
         initial_comment: '📄 CV preview for your review:',
       });
+      console.log('[TRIGGER] file upload response:', uploadRes?.file?.id || uploadRes?.file_id || 'unknown');
 
       // Post confirmation with buttons
       await postConfirmation(client, channel, ts, message.user, aiResult, pdfPath);

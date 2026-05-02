@@ -7,6 +7,7 @@ export default function registerActions(app) {
   app.action('action_apply', async ({ ack, body, action, client }) => {
     await ack();
     const userId = action.value;
+    console.log(`[ACTIONS] action_apply clicked by user=${userId} thread=${body.container.thread_ts}`);
     const sessionData = session.get(userId);
 
     if (!sessionData) {
@@ -21,6 +22,7 @@ export default function registerActions(app) {
 
     try {
       const { applyEmail, subject, body: emailBody, pdfPath, cv_filename } = sessionData;
+      console.log(`[ACTIONS] sending email to ${applyEmail} filename=${cv_filename}`);
       
       let pdfBuffer = null;
       if (pdfPath && fs.existsSync(pdfPath)) {
@@ -29,6 +31,7 @@ export default function registerActions(app) {
 
       await sendEmail(applyEmail, subject, emailBody, pdfBuffer, cv_filename);
 
+      console.log('[ACTIONS] email send succeeded');
       await client.chat.postEphemeral({
         channel: body.channel.id,
         user: userId,
@@ -44,8 +47,13 @@ export default function registerActions(app) {
         text: `Failed to send email: ${error.message}`
       });
     } finally {
-      if (sessionData.pdfPath && fs.existsSync(sessionData.pdfPath)) {
-        fs.unlinkSync(sessionData.pdfPath);
+      try {
+        if (sessionData && sessionData.pdfPath && fs.existsSync(sessionData.pdfPath)) {
+          fs.unlinkSync(sessionData.pdfPath);
+          console.log('[ACTIONS] removed temp pdf', sessionData.pdfPath);
+        }
+      } catch (e) {
+        console.warn('[ACTIONS] error removing pdf:', e.message);
       }
       session.delete(userId);
     }
@@ -55,6 +63,7 @@ export default function registerActions(app) {
   app.action('action_leave', async ({ ack, body, action, client }) => {
     await ack();
     const userId = action.value;
+    console.log(`[ACTIONS] action_leave clicked by user=${userId} thread=${body.container.thread_ts}`);
     const sessionData = session.get(userId);
 
     if (sessionData && sessionData.pdfPath && fs.existsSync(sessionData.pdfPath)) {

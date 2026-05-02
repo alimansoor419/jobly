@@ -9,8 +9,9 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const CV_PATH = path.join(__dirname, '../../data/cv.txt');
-let CV_TEXT = '';
+const CV_PATH = path.resolve(process.cwd(), 'data/cv.txt');
+console.log('[CV Loader] CWD:', process.cwd());
+console.log('[CV Loader] CV Path:', CV_PATH);let CV_TEXT = '';
 
 try {
   if (!fs.existsSync(CV_PATH)) {
@@ -35,6 +36,7 @@ const FALLBACK_MODELS = [
 ];
 
 export async function runAgent(jobDescription) {
+  console.log(`[AI Agent] runAgent invoked. jobDescription length=${jobDescription ? jobDescription.length : 0}`);
   const prompt = `
 You are a professional job application assistant. You will be given a job description and a candidate's CV.
 Respond ONLY with a raw JSON object. No markdown, no code fences, no preamble.
@@ -110,7 +112,7 @@ ${CV_TEXT}
           cv_filename: parsed.cv_filename
         };
       } catch (parseError) {
-        console.error(`[AI Agent] JSON Parse Error using ${modelName}:`, parseError, "Raw context:", text);
+        console.error(`[AI Agent] JSON Parse Error using ${modelName}:`, parseError, "Raw context start:", text?.slice(0,1000));
         throw new Error("ai_parse_failed");
       }
       

@@ -7,6 +7,8 @@ import registerActions from './slack/actions.js';
 
 dotenv.config();
 
+console.log(`[STARTUP] NODE_ENV=${process.env.NODE_ENV || 'development'} PORT=${process.env.PORT || 3000}`);
+
 const { SLACK_BOT_TOKEN, SLACK_SIGNING_SECRET, SLACK_APP_TOKEN } = process.env;
 
 // Initialize Slack Bolt App
@@ -27,9 +29,14 @@ registerTrigger(app);
 registerActions(app);
 
 (async () => {
-  // Start Bolt App
-  await app.start();
-  console.log('⚡️ Slack Bolt app is running with Socket Mode!');
+  try {
+    console.log('[STARTUP] Starting Slack Bolt app...');
+    await app.start();
+    console.log('⚡️ Slack Bolt app is running with Socket Mode!');
+  } catch (err) {
+    console.error('[STARTUP] Failed to start Slack Bolt app:', err);
+    throw err;
+  }
 
   // Start Express for health check (optional but good practice)
   expressApp.get('/health', (req, res) => res.send('OK'));
