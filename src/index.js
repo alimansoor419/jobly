@@ -33,8 +33,8 @@ registerActions(app);
 
   // Start Express for health check (optional but good practice)
   expressApp.get('/health', (req, res) => res.send('OK'));
-  expressApp.listen(port + 1, () => {
-    console.log(`📡 Express health check listening on port ${port + 1}`);
+  expressApp.listen(port, () => {
+    console.log(`📡 Express health check listening on port ${port}`);
   });
 
   console.log("🚀 Job application automation system running");
