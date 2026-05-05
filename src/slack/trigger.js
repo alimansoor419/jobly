@@ -4,6 +4,7 @@ import { postConfirmation } from './confirmation.js';
 import { buildCvPdf } from '../utils/cv_builder.js';
 import fs from 'fs';
 import dotenv from 'dotenv';
+import logger from '../utils/logger.js';
 
 dotenv.config();
 
@@ -11,20 +12,39 @@ const { SLACK_WORKFLOW_CHANNEL_ID, MY_SLACK_USER_ID } = process.env;
 
 export default function registerTrigger(app) {
   app.message(async ({ message, client }) => {
-    console.log(`[TRIGGER] incoming message ts=${message?.ts} user=${message?.user} channel=${message?.channel}`);
+    logger.info('trigger.hit', { ts: message?.ts, user: message?.user, channel: message?.channel });
+    logger.info('trigger.incoming', { ts: message?.ts, user: message?.user, channel: message?.channel });
     try {
       // Ignore bot messages and messages from other channels
       if (message.bot_id !== undefined) {
-        console.log('[TRIGGER] ignoring message from bot');
+        logger.info('trigger.ignored', 'ignoring message from bot');
         return;
       }
       if (message.channel !== SLACK_WORKFLOW_CHANNEL_ID) {
-        console.log(`[TRIGGER] ignoring message from channel ${message.channel}`);
+        logger.info('trigger.ignored_channel', { channel: message.channel });
         return;
+      }
+
+      // Major step log: message received
+      logger.info('trigger.received', 'message received - parsing payload');
+
+      // Log first non-empty line of data/cv.txt for traceability
+      try {
+        const cvPath = './data/cv.txt';
+        if (fs.existsSync(cvPath)) {
+          const cvText = fs.readFileSync(cvPath, 'utf-8');
+          const firstLine = cvText.split(/\r?\n/).find(l => l && l.trim()) || '';
+          logger.info('trigger.cv_first_line', firstLine);
+        } else {
+          logger.warn('trigger.cv_missing', 'CV file not found at data/cv.txt');
+        }
+      } catch (e) {
+        logger.warn('trigger.cv_read_error', { error: e?.message || e });
       }
 
       // Filter to only messages from MY_SLACK_USER_ID
       if (message.user !== MY_SLACK_USER_ID) {
+        logger.info('trigger.ignored_user', { user: message.user });
         return;
       }
 
@@ -51,19 +71,20 @@ export default function registerTrigger(app) {
       });
 
       // Call AI agent
-      console.log('[TRIGGER] calling AI agent for job description length', (payload.jobDescription || '').length);
+      logger.info('trigger.call_ai', { jobDescriptionLength: (payload.jobDescription || '').length });
       const aiResult = await runAgent(payload.jobDescription);
-      console.log('[TRIGGER] AI agent returned result');
+      logger.info('trigger.ai_response', { model_used: aiResult?.model_used || 'unknown' });
 
       // Add apply-at-email to the result for later use
       aiResult.applyEmail = payload.applyEmail;
 
       // Step A - Build the PDF
-      console.log('[TRIGGER] building CV PDF:', aiResult.cv_filename);
+      logger.info('trigger.build_pdf', { filename: aiResult.cv_filename });
       const pdfPath = await buildCvPdf(aiResult.cv_html, aiResult.cv_filename);
-      console.log('[TRIGGER] built CV PDF at', pdfPath);
+      logger.info('trigger.built_pdf', { path: pdfPath });
 
       // Step B - Upload the PDF to Slack before posting the approval message
+      logger.info('trigger.upload', 'uploading CV to Slack (sending response)');
       const uploadRes = await client.files.uploadV2({
         channel_id: channel,
         thread_ts: ts, // optionally post the upload to the thread
@@ -71,13 +92,14 @@ export default function registerTrigger(app) {
         file: fs.createReadStream(pdfPath),
         initial_comment: '📄 CV preview for your review:',
       });
-      console.log('[TRIGGER] file upload response:', uploadRes?.file?.id || uploadRes?.file_id || 'unknown');
+      logger.info('trigger.upload_response', { fileId: uploadRes?.file?.id || uploadRes?.file_id || 'unknown' });
 
       // Post confirmation with buttons
       await postConfirmation(client, channel, ts, message.user, aiResult, pdfPath);
+      logger.info('trigger.confirmation_posted', { channel, thread: ts, user: message.user });
 
     } catch (error) {
-      console.error("Trigger module error:", error);
+      logger.error('trigger.error', { error: error?.message || error });
       await client.chat.postMessage({
         channel: message.channel,
         thread_ts: message.ts,

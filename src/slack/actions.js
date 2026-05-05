@@ -1,13 +1,14 @@
 import session from '../session/store.js';
 import { sendEmail } from '../email/gmail.js';
 import fs from 'fs';
+import logger from '../utils/logger.js';
 
 export default function registerActions(app) {
   // Handle "Apply" button
   app.action('action_apply', async ({ ack, body, action, client }) => {
     await ack();
     const userId = action.value;
-    console.log(`[ACTIONS] action_apply clicked by user=${userId} thread=${body.container.thread_ts}`);
+    logger.info('actions.apply.clicked', { userId, thread: body.container.thread_ts });
     const sessionData = session.get(userId);
 
     if (!sessionData) {
@@ -22,24 +23,33 @@ export default function registerActions(app) {
 
     try {
       const { applyEmail, subject, body: emailBody, pdfPath, cv_filename } = sessionData;
-      console.log(`[ACTIONS] sending email to ${applyEmail} filename=${cv_filename}`);
+      // sanitize applyEmail here so logs show the actual recipients we will use
+      const extractEmails = (input) => {
+        if (!input) return [];
+        const re = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
+        const matches = input.match(re);
+        return matches || [];
+      };
+      const recipients = extractEmails(applyEmail);
+      const toHeader = recipients.join(', ');
+      logger.info('actions.apply.sending_email', { to: toHeader || applyEmail, filename: cv_filename });
       
       let pdfBuffer = null;
       if (pdfPath && fs.existsSync(pdfPath)) {
         pdfBuffer = fs.readFileSync(pdfPath);
       }
 
-      await sendEmail(applyEmail, subject, emailBody, pdfBuffer, cv_filename);
+      await sendEmail(toHeader || applyEmail, subject, emailBody, pdfBuffer, cv_filename);
 
-      console.log('[ACTIONS] email send succeeded');
+      logger.info('actions.apply.email_sent', { to: applyEmail });
       await client.chat.postEphemeral({
         channel: body.channel.id,
         user: userId,
         thread_ts: body.container.thread_ts,
-        text: `Email sent to ${applyEmail}. Good luck!`
+        text: `Email sent to ${applyEmail}. File: ${cv_filename || 'n/a'}. Model used: ${sessionData.model_used || 'unknown'}. Good luck!`
       });
     } catch (error) {
-      console.error("Action apply error:", error);
+      logger.error('actions.apply.error', { error: error?.message || error });
       await client.chat.postEphemeral({
         channel: body.channel.id,
         user: userId,
@@ -50,10 +60,10 @@ export default function registerActions(app) {
       try {
         if (sessionData && sessionData.pdfPath && fs.existsSync(sessionData.pdfPath)) {
           fs.unlinkSync(sessionData.pdfPath);
-          console.log('[ACTIONS] removed temp pdf', sessionData.pdfPath);
+          logger.info('actions.clean.removed_pdf', { path: sessionData.pdfPath });
         }
       } catch (e) {
-        console.warn('[ACTIONS] error removing pdf:', e.message);
+        logger.warn('actions.clean.error_removing_pdf', { error: e?.message || e });
       }
       session.delete(userId);
     }
@@ -63,7 +73,7 @@ export default function registerActions(app) {
   app.action('action_leave', async ({ ack, body, action, client }) => {
     await ack();
     const userId = action.value;
-    console.log(`[ACTIONS] action_leave clicked by user=${userId} thread=${body.container.thread_ts}`);
+    logger.info('actions.leave.clicked', { userId, thread: body.container.thread_ts });
     const sessionData = session.get(userId);
 
     if (sessionData && sessionData.pdfPath && fs.existsSync(sessionData.pdfPath)) {

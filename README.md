@@ -75,3 +75,50 @@ email:{{hr@acme.com}}
 - `src/session/`: In-memory session management.
 - `src/utils/`: Message parsing and Puppeteer PDF generation (`cv_builder.js`).
 - `data/cv.txt`: Your base CV file.
+
+## Environment variables
+Create a `.env` file in the project root (copy from `.env.example`) and set these variables. Replace the example values with your own secrets/IDs.
+
+Required:
+- `SLACK_BOT_TOKEN` — Bot token from OAuth & Permissions
+- `SLACK_SIGNING_SECRET` — App signing secret
+- `SLACK_APP_TOKEN` — App-level token (Socket Mode)
+- `SLACK_WORKFLOW_CHANNEL_ID` — Channel ID where the workflow listens
+- `MY_SLACK_USER_ID` — Your Slack user ID
+- `GEMINI_API_KEY` — Google Generative API key (or `GOOGLE_API_KEY`)
+- `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN` — Gmail OAuth credentials + refresh token
+- `GMAIL_SENDER_ADDRESS` — The sender email address (your Gmail address)
+
+Optional / environment-specific:
+- `PUPPETEER_CACHE_DIR` — Path to Puppeteer cache (useful on Render). Example: `/opt/render/.cache/puppeteer`
+- `PUPPETEER_EXECUTABLE_PATH_WIN` — Windows Chrome executable path for local development. Example: `C:/Program Files/Google/Chrome/Application/chrome.exe` (do NOT wrap in quotes)
+- `PUPPETEER_EXECUTABLE_PATH` — Generic executable path (Linux/Render). The app will attempt to detect Render's cached Chrome automatically if unset.
+- `GROQ_API_KEY_1`, `GROQ_API_KEY_2`, `GROQ_API_KEY_3` — Optional GROQ keys (used if you prefer GROQ provider)
+- `OPENROUTER_API_KEY` — Optional OpenRouter API key (fallback provider)
+
+Example `.env` snippet (do not commit secrets to git):
+```
+# Slack
+SLACK_BOT_TOKEN=xoxb-...
+SLACK_SIGNING_SECRET=...
+SLACK_APP_TOKEN=xapp-...
+SLACK_WORKFLOW_CHANNEL_ID=C01234567
+MY_SLACK_USER_ID=U01234567
+
+# Google
+GEMINI_API_KEY=AIza...   # Google Generative API key
+GMAIL_CLIENT_ID=...
+GMAIL_CLIENT_SECRET=...
+GMAIL_REFRESH_TOKEN=...
+GMAIL_SENDER_ADDRESS=your.email@example.com
+
+# Puppeteer (optional)
+PUPPETEER_CACHE_DIR=/opt/render/.cache/puppeteer
+PUPPETEER_EXECUTABLE_PATH_WIN=C:/Program Files/Google/Chrome/Application/chrome.exe
+```
+
+Notes:
+- On Windows, set `PUPPETEER_EXECUTABLE_PATH_WIN` to your local Chrome/Chromium executable if Puppeteer cannot find a browser. Use forward slashes or double backslashes (no surrounding quotes).
+- The app tries to be non-destructive: Render/Linux lookup remains unchanged and will still look under `/opt/render/.cache/puppeteer` when applicable.
+- Keep secrets out of version control. Use environment variables in your deployment platform.
+

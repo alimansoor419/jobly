@@ -1,23 +1,33 @@
+import logger from '../utils/logger.js';
 const sessions = new Map();
 
 export default {
   get: (userId) => {
     const val = sessions.get(userId) ?? null;
-    console.log(`[SESSION] get ${userId} -> ${val ? 'hit' : 'miss'}`);
+    try {
+      logger.info('session.get', { userId, hit: !!val });
+    } catch (e) {
+      // fallback to basic logging
+      logger.info('session.get', { userId, hit: !!val });
+    }
     return val;
   },
   set: (userId, data) => {
     sessions.set(userId, data);
     try {
       const keys = data && typeof data === 'object' ? Object.keys(data).length : 0;
-      console.log(`[SESSION] set ${userId} -> stored (${keys} keys)`);
+      logger.info('session.set', { userId, keys });
     } catch (e) {
-      console.log(`[SESSION] set ${userId} -> stored`);
+      logger.info('session.set', { userId, stored: true });
     }
   },
   delete: (userId) => {
     const existed = sessions.delete(userId);
-    console.log(`[SESSION] delete ${userId} -> ${existed ? 'deleted' : 'none'}`);
+    try {
+      logger.info('session.delete', { userId, deleted: existed });
+    } catch (e) {
+      logger.info('session.delete', { userId, deleted: existed });
+    }
     return existed;
   }
 };

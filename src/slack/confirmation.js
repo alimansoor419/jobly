@@ -1,16 +1,17 @@
 import session from '../session/store.js';
+import logger from '../utils/logger.js';
 
 export async function postConfirmation(client, channel, threadTs, userId, aiResult, pdfPath) {
   try {
     // Store result and pdfPath in session
     aiResult.pdfPath = pdfPath;
     session.set(userId, aiResult);
-    console.log(`[CONFIRM] stored session for ${userId} thread=${threadTs} filename=${aiResult.cv_filename}`);
+    logger.info('confirm.stored_session', { userId, threadTs, filename: aiResult.cv_filename });
 
-    const { subject, body } = aiResult;
+    const { subject, body, model_used } = aiResult;
 
     // Truncate text if it exceeds Slack's 3000 character limit for section blocks
-    const truncate = (str, limit = 2900) => (str.length > limit ? str.substring(0, limit) + "..." : str);
+    const truncate = (str = '', limit = 2900) => (str.length > limit ? str.substring(0, limit) + "..." : str);
 
     const blocks = [
       {
@@ -25,18 +26,20 @@ export async function postConfirmation(client, channel, threadTs, userId, aiResu
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*Email subject:*\n${subject}`
-        }
-      },
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
           text: `*Email body:*\n${truncate(body)}`
         }
       },
       {
         type: "divider"
+      },
+      {
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: `Model used: *${model_used || 'unknown'}*`
+          }
+        ]
       },
       {
         type: "section",
@@ -83,9 +86,9 @@ export async function postConfirmation(client, channel, threadTs, userId, aiResu
       text: "AI has drafted your application",
       blocks: blocks
     });
-    console.log(`[CONFIRM] posted confirmation message to channel=${channel} thread=${threadTs}`);
+    logger.info('confirm.posted', { channel, threadTs });
   } catch (error) {
-    console.error("Error posting Slack confirmation:", error);
+    logger.error('confirm.error', { error: error?.message || error });
     await client.chat.postMessage({
       channel: channel,
       thread_ts: threadTs,
