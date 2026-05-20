@@ -3,10 +3,15 @@ import { runAgent } from '../ai/agent.js';
 import { postConfirmation } from './confirmation.js';
 import { buildCvPdf } from '../utils/cv_builder.js';
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import logger from '../utils/logger.js';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const { SLACK_WORKFLOW_CHANNEL_ID, MY_SLACK_USER_ID } = process.env;
 
@@ -30,7 +35,7 @@ export default function registerTrigger(app) {
 
       // Log first non-empty line of data/cv.txt for traceability
       try {
-        const cvPath = './data/cv.txt';
+        const cvPath = path.resolve(__dirname, '../../data/cv.txt');
         if (fs.existsSync(cvPath)) {
           const cvText = fs.readFileSync(cvPath, 'utf-8');
           const firstLine = cvText.split(/\r?\n/).find(l => l && l.trim()) || '';
@@ -57,26 +62,34 @@ export default function registerTrigger(app) {
         await client.chat.postMessage({
           channel: channel,
           thread_ts: ts,
-          text: "Invalid format. Send: {\"job-description\":\"...\",\"apply-at-email\":\"...\"}"
+          text: "Invalid format. First line must be the apply email, followed by the job description."
         });
         return;
       }
 
-      // Let user know AI is thinking
-      await client.chat.postEphemeral({
-        channel: channel,
-        user: message.user,
+      // Post a live status message that gets updated as models are tried
+      const statusMsg = await client.chat.postMessage({
+        channel,
         thread_ts: ts,
-        text: "Analyzing job description and tailoring your CV... This may take a moment."
-      });
+        text: '🤖 Analyzing job description and tailoring your CV...'
+      }).catch(() => null);
+
+      const updateStatus = async (text) => {
+        if (!statusMsg?.message?.ts) return;
+        await client.chat.update({ channel, ts: statusMsg.message.ts, text }).catch(() => {});
+      };
 
       // Call AI agent
       logger.info('trigger.call_ai', { jobDescriptionLength: (payload.jobDescription || '').length });
-      const aiResult = await runAgent(payload.jobDescription);
+      const aiResult = await runAgent(payload.jobDescription, updateStatus);
       logger.info('trigger.ai_response', { model_used: aiResult?.model_used || 'unknown' });
 
-      // Add apply-at-email to the result for later use
+      // Update status to show which model succeeded
+      await updateStatus(`✅ Done — used *${aiResult.model_used}*`);
+
+      // Add apply-at-email and jobDescription to the result for later use
       aiResult.applyEmail = payload.applyEmail;
+      aiResult.jobDescription = payload.jobDescription;
 
       // Step A - Build the PDF
       logger.info('trigger.build_pdf', { filename: aiResult.cv_filename });

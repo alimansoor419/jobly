@@ -69,6 +69,16 @@ export async function postConfirmation(client, channel, threadTs, userId, aiResu
             type: "button",
             text: {
               type: "plain_text",
+              text: "Recreate CV",
+              emoji: true
+            },
+            value: userId,
+            action_id: "action_recreate"
+          },
+          {
+            type: "button",
+            text: {
+              type: "plain_text",
               text: "Leave",
               emoji: true
             },

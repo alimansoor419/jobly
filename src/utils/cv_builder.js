@@ -7,46 +7,26 @@ import logger from '../utils/logger.js';
 import { execSync } from 'child_process';
 
 function getChromePath() {
-  // 1. Prefer an OS-specific env var first (so Render/Linux and Windows can coexist)
-  const envPathWin = process.env.PUPPETEER_EXECUTABLE_PATH_WIN || process.env.PUPPETEER_EXECUTABLE_PATH_WINDOWS;
-  if (process.platform === 'win32' && envPathWin && !envPathWin.includes('*') && existsSync(envPathWin)) {
-    return envPathWin;
+  if (process.platform === 'win32') {
+    const winPath = process.env.PUPPETEER_EXECUTABLE_PATH_WIN;
+    return winPath && existsSync(winPath)
+      ? winPath
+      : "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
   }
 
-  // 2. Generic env var — but avoid returning a Linux Render path when running on Windows
-  const envPath = process.env.PUPPETEER_EXECUTABLE_PATH;
-  if (envPath && !envPath.includes('*')) {
-    const normalized = envPath.toLowerCase();
-    const looksLikeRenderPath = normalized.includes('opt/render') || normalized.includes('/opt/render') || normalized.includes('opt\\render');
-    if (process.platform === 'win32' && looksLikeRenderPath) {
-      // ignore Linux render path on Windows
-    } else if (existsSync(envPath)) {
-      if (process.platform !== 'win32') {
-        try { execSync(`chmod +x "${envPath}"`); } catch (e) {}
-      }
-      return envPath;
-    }
+  // Linux (AWS / Ubuntu / Render)
+  const linuxPath = process.env.PUPPETEER_EXECUTABLE_PATH;
+
+  if (linuxPath && existsSync(linuxPath)) {
+    return linuxPath;
   }
 
-  // 2. Dynamically resolve the glob — finds the actual versioned folder
-  try {
-    if (process.platform !== 'win32') {
-      const found = execSync(
-        'find /opt/render/.cache/puppeteer/chrome -name "chrome" -type f 2>/dev/null | head -1'
-      ).toString().trim();
+  // fallback for Ubuntu AWS
+  const defaultLinuxPath = "/usr/bin/chromium-browser";
+  if (existsSync(defaultLinuxPath)) {
+    return defaultLinuxPath;
+  }
 
-      if (found && existsSync(found)) {
-        try { execSync(`chmod +x "${found}"`); } catch (e) {}
-        return found;
-      }
-    }
-  } catch (e) { }
-
-  // 3. Fall back to whatever puppeteer thinks (works locally)
-  try {
-    const p = puppeteer.executablePath();
-    if (p && existsSync(p)) return p;
-  } catch (e) {}
   return null;
 }
 export async function buildCvPdf(cvHtml, filename) {
@@ -73,9 +53,6 @@ export async function buildCvPdf(cvHtml, filename) {
 
     if (execPath && existsSync(execPath)) {
       launchOptions.executablePath = execPath;
-      if (process.platform !== 'win32') {
-        try { execSync(`chmod +x "${execPath}"`); logger.info('cv_builder.chmod', { execPath }); } catch (e) { logger.warn('cv_builder.chmod_failed', { error: e?.message || e }); }
-      }
     } else {
       logger.warn('cv_builder.exec_missing', { execPath });
     }

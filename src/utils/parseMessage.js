@@ -1,21 +1,26 @@
 export default function parseMessage(text) {
-  // Extract text within double curly braces for each key
-  const jdMatch = text.match(/job-description:\{\{([\s\S]*?)\}\}/);
-  const emailMatch = text.match(/email:\{\{([\s\S]*?)\}\}/);
+  const lines = text.split(/\r?\n/);
 
-  if (!jdMatch || !emailMatch) {
-    throw new Error("Format must be exactly:\njob-description:{{ [your text here] }}\nemail:{{ [email here] }}");
+  // Find index of first non-empty line
+  const firstLineIndex = lines.findIndex(l => l.trim() !== '');
+  if (firstLineIndex === -1) {
+    throw new Error('Invalid format. First line must be the apply email, followed by the job description.');
   }
 
-  const jobDescription = jdMatch[1].trim();
-  const applyEmail = emailMatch[1].trim();
+  // Strip Slack auto-linked mailto format: <mailto:email@domain.com|email@domain.com> or [email](mailto:...)
+  const rawFirstLine = lines[firstLineIndex]
+    .replace(/<mailto:[^|>]+\|([^>]+)>/g, '$1')           // <mailto:x|x> (Slack mrkdwn)
+    .replace(/\[([^\]]+)\]\(mailto:[^)]+\)/g, '$1');      // [x](mailto:x) (markdown)
 
-  if (!applyEmail.includes('@')) {
-    throw new Error("Invalid email address inside email:{{...}}");
+  const emailMatch = rawFirstLine.match(/[\w.+\-]+@[\w\-]+\.[a-z]{2,}/i);
+  if (!emailMatch) {
+    throw new Error('Invalid format. First line must be the apply email, followed by the job description.');
   }
+  const applyEmail = emailMatch[0];
 
+  const jobDescription = lines.slice(firstLineIndex + 1).join('\n').trim();
   if (!jobDescription) {
-    throw new Error("Job description inside job-description:{{...}} is empty.");
+    throw new Error('Invalid format. First line must be the apply email, followed by the job description.');
   }
 
   return { jobDescription, applyEmail };
