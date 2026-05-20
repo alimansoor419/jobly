@@ -130,4 +130,5 @@ Notes:
 ```bash
 scp -i "C:\Users\alima\Downloads\jobly-key.pem" -r "C:\Users\alima\Desktop\personal\job-workflow\jobly" ubuntu@54.206.22.191:/home/ubuntu/
 ```
-git remote add origin https://github.com/YourUsername/Jobly.git
+git remote add origin repo_url
+
